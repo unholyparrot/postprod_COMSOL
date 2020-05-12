@@ -12,22 +12,22 @@ def setup_args():
 
     parser.add_argument('-in',
                         '--input',
-                        action='store',
-                        help='Input file with COMSOL export',
+                        nargs='+',
+                        help='Input file(s) with COMSOL export',
                         type=str,
                         required=True)
 
     parser.add_argument('-v',
                         '--variable',
                         nargs='+',
-                        help='Variable for plotting',
+                        help='Variable(s) for plotting',
                         type=str,
                         required=False)
 
     parser.add_argument('-t',
                         '--time',
                         nargs='+',
-                        help='Time point for plotting',
+                        help='Time point(s) for plotting',
                         type=float,
                         required=False)
 
@@ -36,6 +36,14 @@ def setup_args():
                         help='Output directory',
                         type=str,
                         required=False)
+
+    parser.add_argument('-rm',
+                        '--remove',
+                        help='Flag for removing input TXT after making CSV',
+                        action='store_true',
+                        default=True,
+                        required=False,
+                        )
 
     return parser.parse_args()
 

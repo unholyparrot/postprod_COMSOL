@@ -3,6 +3,7 @@ This block provides all the manipulations with the data,
 such as reading from file, making output csv and plots.
 """
 import os
+import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ def make_csv(df, filename, output=''):
     """
     f_name, f_ex = os.path.splitext(filename)
     df.to_csv(output + '{}_new_df.csv'.format(os.path.basename(f_name)), index=False)
+    print("CSV is done: " + output + '{}_new_df.csv'.format(os.path.basename(f_name)))
 
 
 def read_from_csv(filename):
@@ -28,9 +30,9 @@ def read_from_csv(filename):
     :param filename: path to the csv file
     :return: pandas.DataFrame
     """
-    print("    Reading from csv file into DataFrame.")
+    print("Reading from csv file into DataFrame.")
     df = pd.read_csv(filename).reset_index().iloc[:, 1:]
-    print("    Reading from file is done.")
+    print("Reading from file is done.")
     return df
 
 
@@ -43,35 +45,30 @@ def get_data_frame(filename):
     :param filename: name of the data file
     :return: pandas.DataFrame
     """
-    print("    Parsing the input file.")
     df = pd.DataFrame(columns=["t", "x", "y", "U", "sr", "thr", "fn", "fg"])
-    line_progress = 0
     with open(filename, 'r') as f_data:
+        # skipping the heading
         for _ in range(9):
             next(f_data)
-        while True:
-            line = f_data.readline()
+        # beautiful status bar is available now
+        for line in tqdm.tqdm(f_data.readlines(), desc=filename):
             if line:
                 bs = line.split()
                 if len(bs) >= 1:
-                    x = np.tile(np.array([bs[0]], dtype=np.float32), 301)
-                    y = np.tile(np.array([bs[1]], dtype=np.float32), 301)
-                    time = np.arange(0, 30.1, 0.1, dtype=np.float32)
+                    x = np.tile(np.array([bs[0]], dtype=np.float32), 101)
+                    y = np.tile(np.array([bs[1]], dtype=np.float32), 101)
+                    time = np.arange(0, 10.1, 0.1, dtype=np.float32)
                     values = np.array([time, x, y, bs[2::5], bs[3::5], bs[4::5], bs[5::5], bs[6::5]],
                                       dtype=np.float32).T
                     dft = pd.DataFrame(values, columns=["t", "x", "y", "U", "sr", "thr", "fn", "fg"])
                     df = pd.concat([df, dft])
-                    line_progress += 1
-                    if (line_progress % 1000) == 0:
-                        print('    Current row of {0}: {1}.'.format(filename, line_progress))
             else:
                 break
     df = df.reset_index().iloc[:, 1:]
-    print('    Parsing the input file is done.')
     return df
 
 
-def get_time(df, time=30):
+def get_time(df, time=10):
     """
     Selects only points with t = time from the df, resets the index.
     :param df: pandas.DataFrame with COMSOL export
@@ -109,7 +106,7 @@ def interpolate_values(df, variable='U', inter_num=1000):
 
 # TODO: нужно изменить границы colorbar для графиков скорости сдвига
 # TODO: нужно добавить считывание файла-конфигуратора для изменения масштаба и подписей
-def draw_interpolated(grid_x, grid_y, grid_z, output, variable='U', time=30):
+def draw_interpolated(grid_x, grid_y, grid_z, output, variable='U', time=10):
     """
     Takes the interpolated data to make a colormap. Doesn't show the plot, but saves it.
     :param grid_x: grid for x
