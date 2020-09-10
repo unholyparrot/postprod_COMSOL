@@ -18,7 +18,6 @@ def main():
         # if I want to remove the input after making a csv
         if args.remove:
             os.remove(f_name)
-            print("{} was removed".format(f_name))
 
 
 if __name__ == '__main__':
