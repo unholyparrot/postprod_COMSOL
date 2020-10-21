@@ -1,12 +1,35 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Скрипт для превращения экспорта COMSOL (txt) в csv.
 """
-This block provides manipulations with the data,
-such as reading from file into DataFrame and making output CSV.
-"""
-import os
+
+import argparse
 import re
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
+import datetime
+import os 
+
+from tqdm.auto import tqdm
+
+
+def setup_args():
+    parser = argparse.ArgumentParser(description="Process the COMSOL export to csv")
+
+    parser.add_argument('-in',
+                        '--input',
+                        nargs='+',
+                        help="""Path to the input file(s)
+                                Example: -in /home/owl/export1.txt /home/owl/export2.txt""", 
+                        type=str,
+                        required=True)
+
+    parser.add_argument('-out', 
+                        '--output',
+                        help="""Path to the output directory.
+                                Example: -out /home/owl/output_csv""",
+                        type=str,
+                        required=True)
+    
+    return parser.parse_args()
 
 
 class ParsingIterator:
@@ -49,14 +72,11 @@ def count_total_rows(filename):
         return sum(bl.count("\n") for bl in blocks(f))
 
 
-# TODO: Нужно нормально дописать блок try-except
 def headings_row_parser(headings_array: list):
     """
     Parses a header describing the data structure of a COMSOL export file.
-
     Parameters:
         headings_array (list): an array containing the header string, split by space.
-
     Returns:
         coordinates_headings (list): all headings of coordinates (x, y, z, ...).
         variables_headings (list): all headings of found variables (U, v, br.sr, ...)
@@ -93,10 +113,7 @@ def headings_row_parser(headings_array: list):
     return coordinates_headings, variables_headings, params
 
 
-def overwriting_input_data(filename):
-    """
-    
-    """
+def overwriting_input_data(filename, output=""):
     total_rows = count_total_rows(filename)
     with open(filename, 'r') as f_data:
         # saving the entire header of the original file
@@ -117,11 +134,11 @@ def overwriting_input_data(filename):
                         ','.join(coordinates_headings) + ',' + 
                         ','.join(variables_headings) + '\n')
         
-        with open('parsed_{}'.format(filename), 'w') as w_data:
+        with open(output + '/parsed_{}.csv'.format(os.path.splitext(os.path.split(filename)[1])[0]), 'w') as w_data:
             # w_data.write(heading)
             w_data.write(column_names)
             # читаем ещё столько раз, сколько есть строчек с данными
-            for _ in tqdm(range(total_rows - 9)):
+            for _ in tqdm(range(total_rows - 9), desc=os.path.split(filename)[1]):
                 # сразу разделяем по пробелам
                 line = next(f_data).split()
                 # отрезаем переменные
@@ -132,3 +149,25 @@ def overwriting_input_data(filename):
                          ','.join(coords) + ',' + 
                          ','.join(elem) + '\n')
                     w_data.write(s)
+
+
+def main():
+    args = setup_args()
+    with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
+        logger.write(str(datetime.datetime.now()) + ' | argparse | {}'.format(args) + '\n')
+    
+    for f_name in args.input:
+        overwriting_input_data(f_name, output=args.output)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+        with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
+            logger.write("__________" + '\n')
+    except FileNotFoundError as er:
+        print(er)
+        print("Check the input/output direcory.")
+        with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
+            logger.write(str(datetime.datetime.now()) + ' | error | ' + str(er) + '\n')
+            logger.write("__________" + '\n')

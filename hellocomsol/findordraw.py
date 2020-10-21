@@ -8,8 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 from scipy.integrate import simps
-# может стоит поменять на from tqdm.autonotebook import tqdm (???)
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 
 def interpolate_values(df, variable='U', inter_num=1000):
@@ -88,7 +87,7 @@ def get_extr_df(df, var_p, time_slice=1, func_type="max"):
     return v_max_df
 
 
-def integrate_var(df, cutline, as_cutline='x', as_y='fn', as_x='y', as_param='t'):
+def integrate_var(df, cutline, as_cutline='x', as_y='fn(mol/m^3)', as_x='y', as_param='t'):
     """
     Integrates the values from DataFrame. 
     :param df: DataFrame with values
@@ -109,4 +108,3 @@ def integrate_var(df, cutline, as_cutline='x', as_y='fn', as_x='y', as_param='t'
             I_keeper[i][j] = simps(y, x)
     
     return I_keeper
-    

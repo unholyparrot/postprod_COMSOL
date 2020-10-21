@@ -1,9 +1,8 @@
 .vscode/
 __pycache__/
 .ipynb_checkpoints/
-venv/
 curr_data/
-pics/
 notebooks/
 test_writing.ipynb
-Untitled.ipynb
+data_comp_fun.ipynb
+log_files/
