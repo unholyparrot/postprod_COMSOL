@@ -2,7 +2,6 @@
 This block provides manipulations with DataFrame, 
 such as finding the maximum or making plots. 
 """
-import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -63,7 +62,7 @@ def draw_interpolated(grid_x, grid_y, grid_z, output, variable='U', time=10):
     plt.close()
 
 
-def get_extr_df(df, var_p, time_slice=1, func_type="max"):
+def get_extremum_df(df, var_p, time_slice=1, func_type="max"):
     """
     Finds the extremum (maximum by default) of the variable at each time point of the whole time array.
     :param df: DataFrame with values
@@ -72,12 +71,15 @@ def get_extr_df(df, var_p, time_slice=1, func_type="max"):
     :param func_type: max or min function
     :return: new DataFrame with max/min information
     """
-    if func_type == "max":
-        func = lambda x_df: x_df.idxmax()
-    elif func_type == "min":
-        func = lambda x_df: x_df.idxmin()
-    else:
-        raise ValueError("Unknown func_type argument {}".format(func_type))
+    def func(x_df):
+
+        if func_type == "max":
+            return x_df.idxmax()
+        elif func_type == "min":
+            return x_df.idxmin()
+        else:
+            raise ValueError("Unknown func_type argument {}".format(func_type))
+
     v_max_df = pd.DataFrame()
     for t_step in df.t.unique()[::time_slice]:
         at_t = df[df.t == t_step].reset_index()
@@ -91,20 +93,20 @@ def integrate_var(df, cutline, as_cutline='x', as_y='fn(mol/m^3)', as_x='y', as_
     """
     Integrates the values from DataFrame. 
     :param df: DataFrame with values
-    :param cutline: ndarray with valeus of the cutline
+    :param cutline: ndarray with values of the cutline
     :param as_y: heading of the column with the values for the integration
     :param as_x: heading of the column as the axis for the integration
-    :param as_param: heading of the column with the values of the parametr
+    :param as_param: heading of the column with the values of the parameter
     :param as_cutline: heading of the cutline column
     :return: (cutline.size, df[as_param].unique().size) ndarray with integration results
     """
     along_param = df[as_param].unique()
-    I_keeper = np.empty((cutline.size, along_param.size))
+    integral_keeper = np.empty((cutline.size, along_param.size))
     for i, cut in enumerate(tqdm(cutline, desc="Cutline loop")):
         for j, param in enumerate(along_param):
             at_tx = df[(df[as_cutline] == cut) & (df[as_param] == param)]
             x = at_tx[as_x]
             y = at_tx[as_y]
-            I_keeper[i][j] = simps(y, x)
+            integral_keeper[i][j] = simps(y, x)
     
-    return I_keeper
+    return integral_keeper

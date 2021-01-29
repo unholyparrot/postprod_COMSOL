@@ -40,7 +40,7 @@ class ParsingIterator:
     :param num_variables: number of values per iteration
     """
     def __init__(self, values_array: list, num_variables: int):
-        self.valeus_array = values_array
+        self.values_array = values_array
         self.num_variables = num_variables
         self.start = 0
         self.stop = num_variables
@@ -49,8 +49,8 @@ class ParsingIterator:
         return self
     
     def __next__(self):
-        if self.stop <= len(self.valeus_array):
-            num = self.valeus_array[self.start:self.stop]
+        if self.stop <= len(self.values_array):
+            num = self.values_array[self.start:self.stop]
             self.start += self.num_variables
             self.stop += self.num_variables
             return num
@@ -65,7 +65,8 @@ def count_total_rows(filename):
     def blocks(files, size=65536):
         while True:
             b = files.read(size)
-            if not b: break
+            if not b:
+                break
             yield b
 
     with open(filename, "r", encoding="utf-8", errors='ignore') as f:
@@ -86,8 +87,8 @@ def headings_row_parser(headings_array: list):
     variables_headings = list()
     params = dict()
 
-    try:
-        for elem in headings_array:
+    for elem in headings_array:
+        try:
             if elem != '%':
                 if len(elem) == 1:
                     if elem not in coordinates_headings:
@@ -106,9 +107,12 @@ def headings_row_parser(headings_array: list):
                                 params[param_name].append(param_value)
             else:
                 continue
-    except Exception:
-        print("Oops..." )
-        print(elem)
+        except IndexError as in_err:
+            print(in_err)
+            print(elem)
+        except ValueError as va_err:
+            print(va_err)
+            print(elem)
     
     return coordinates_headings, variables_headings, params
 
@@ -145,7 +149,8 @@ def overwriting_input_data(filename, output=""):
                 coords = line[:len(coordinates_headings)]
                 for couple_number, elem in enumerate(ParsingIterator(line[len(coordinates_headings):], 
                                                                      len(variables_headings))):
-                    s = (','.join([params[x_param][couple_number*len(variables_headings)] for x_param in params.keys()]) + ',' +
+                    s = (','.join([params[x_param][couple_number*len(variables_headings)] for x_param in params.keys()])
+                         + ',' +
                          ','.join(coords) + ',' + 
                          ','.join(elem) + '\n')
                     w_data.write(s)
@@ -153,8 +158,8 @@ def overwriting_input_data(filename, output=""):
 
 def main():
     args = setup_args()
-    with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
-        logger.write(str(datetime.datetime.now()) + ' | argparse | {}'.format(args) + '\n')
+    with open('log_files/log_comsol_txt_rec.txt', 'a+') as my_logger:
+        my_logger.write(str(datetime.datetime.now()) + ' | argparse | {}'.format(args) + '\n')
     
     for f_name in args.input:
         overwriting_input_data(f_name, output=args.output)
@@ -163,11 +168,11 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-        with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
+        with open('log_files/log_comsol_txt_rec.txt', 'a+') as logger:
             logger.write("__________" + '\n')
     except FileNotFoundError as er:
         print(er)
-        print("Check the input/output direcory.")
-        with open('log_files/log_comsol_txt_recomp.txt', 'a+') as logger:
+        print("Check the input/output directory.")
+        with open('log_files/log_comsol_txt_rec.txt', 'a+') as logger:
             logger.write(str(datetime.datetime.now()) + ' | error | ' + str(er) + '\n')
             logger.write("__________" + '\n')
